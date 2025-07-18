@@ -1,0 +1,52 @@
+# Node modules
+node_modules/
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
+
+# Coverage reports
+coverage/
+
+# Optional: if using PM2 or other process managers
+pids/
+*.pid
+*.seed
+
+# Optional: if you use uploads/temp folders
+uploads/
+temp/
+.tmp/
+
+# Optional: frontend-specific files (like React or Vite)
+client/node_modules/
+client/.env
+client/build/
+client/dist/
+client/.next/
+client/.turbo/
+
+# Optional: TypeScript build outputs
+*.tsbuildinfo
+
+# Misc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
