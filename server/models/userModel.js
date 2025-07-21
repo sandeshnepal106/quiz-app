@@ -19,6 +19,14 @@ const userSchema = new mongoose.Schema({
     password:{
         type: String,
         required: true,
+    },
+    resetOtp:{
+        type: String,
+        default: ""
+    },
+    resetOtpExpireAt:{
+        type: Number,
+        default: 0,
     }
 }, {timestamps: true});
 
@@ -28,6 +36,23 @@ userSchema.pre('save', async function(next){
     next();
 });
 
+const followSchema = new mongoose.Schema(
+  {
+    followerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    followingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
 
 const UserModel = mongoose.model("User", userSchema);
-export default UserModel;
+const FollowModel = mongoose.model('Follow', followSchema);
+export { UserModel, FollowModel};

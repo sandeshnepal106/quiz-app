@@ -1,7 +1,7 @@
 import {QuizModel, QuestionModel, OptionModel} from "../models/quizModel.js";
 
 export const postQuiz = async (req, res) =>{
-    const {title, description, tags, createdBy, allowedUsers} = req.body;
+    const {title, description, tags, createdBy, isPrivate, allowedUsers} = req.body;
     if(!title){
         return res.json({success: false, message:"Please enter the quiz title."})
     }
@@ -9,7 +9,7 @@ export const postQuiz = async (req, res) =>{
         return res.json({success: false, message:"Missing quiz author."});
     }
     try {
-        const quiz = new QuizModel({title, description, tags, createdBy, allowedUsers});
+        const quiz = new QuizModel({title, description, tags, createdBy,isPrivate, allowedUsers});
         await quiz.save();
         return res.json({success: true, message: "Quiz created successfully."});
     } catch (error) {
@@ -54,7 +54,33 @@ export const postOption = async (req, res) =>{
     
 }
 
+export const getPrivateQuizzes = async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        const quizzes = await QuizModel.find();
+
+        // Filter quizzes where the userId is in allowedUsers array
+        const allowedQuizzes = quizzes.filter(quiz =>
+            quiz.allowedUsers.includes(userId)
+        );
+
+        if (allowedQuizzes.length === 0) {
+            return res.json({ success: false, message: "User not allowed for any quiz." });
+        }
+
+        return res.json({ success: true, quizzes: allowedQuizzes });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+
+
 export const getQuiz = async (req, res) =>{
+    const userId = req.userId;
+
     const { quizId } = req.query;
     try {
         const quiz = await QuizModel.findById(quizId);

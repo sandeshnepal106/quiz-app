@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
-import mongoose from 'mongoose';
 import userRouter from './routes/userRoutes.js'
-
+import cors from 'cors'
+import cookieParser from 'cookie-parser';
 import connectDB from './config/mongodb.js';
 import quizRouter from './routes/quizRoutes.js';
 
@@ -10,8 +10,15 @@ const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 
-app.use(express.json());
+const allowedOrigins = ['http://localhost:3000'];
 
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 app.get('/', (req, res)=> res.send("API working...."));
 app.use('/api/user', userRouter);
