@@ -1,7 +1,9 @@
 import {QuizModel, QuestionModel, OptionModel} from "../models/quizModel.js";
+import { UserModel } from "../models/userModel.js";
 
 export const postQuiz = async (req, res) =>{
-    const {title, description, tags, createdBy, isPrivate, allowedUsers} = req.body;
+    const {title, description, tags, isPrivate, allowedUsers} = req.body;
+    const createdBy = req.userId;
     if(!title){
         return res.json({success: false, message:"Please enter the quiz title."})
     }
@@ -9,15 +11,48 @@ export const postQuiz = async (req, res) =>{
         return res.json({success: false, message:"Missing quiz author."});
     }
     try {
-        const quiz = new QuizModel({title, description, tags, createdBy,isPrivate, allowedUsers});
+        const quiz = new QuizModel({title, description, tags, createdBy, isPrivate, allowedUsers});
         await quiz.save();
-        return res.json({success: true, message: "Quiz created successfully."});
+        return res.json({success: true, data: quiz, message: "Quiz created successfully."});
     } catch (error) {
         return res.json({success: false, message: error.message})
     }
 }
 
-export const postQuestion = async (req, res) =>{
+export const putQuiz = async (req, res) =>{
+    const {title, description, tags, isPrivate, allowedUsers, quizId} = req.body;
+    if(!title){
+        return res.json({success: false, message:"Please enter the quiz title."})
+    }
+    try {
+        const editedQuiz = await QuizModel.findOneAndUpdate({ _id: quizId },{title, description, tags, isPrivate, allowedUsers}, {new: true});
+        if(!editedQuiz){
+            return res.json({success: false, message: "Quiz not edited."})
+        }
+        return res.json({success: true, message: "Quiz updated successfully."})
+    } catch (error) {
+        return res.json({success: false, message: error.message})
+    }
+}
+
+export const deleteQuiz = async (req, res) =>{
+    const {quizId} = req.body;
+    if(!quizId){
+        return res.json({success: false, message: "Quiz id not given."})
+    }
+    try{
+        const deletedQuiz = await QuizModel.findOneAndDelete({quizId});
+        if(!deletedQuiz){
+            return res.json({success: false, message: "Quiz not deleted."});
+        }
+        return res.json({success: true, message: "Quiz deleted successfully."})
+    }
+    catch(error){
+        return res.json({success: false, message: error.message});
+    }
+}
+
+export const postQuestion = async (req, res) => {
     const {quizId, question} = req.body;
     if(!quizId || !question){
         return res.json({success: false, message: "Missing details."})
@@ -29,19 +64,60 @@ export const postQuestion = async (req, res) =>{
         }
         const newQuestion = new QuestionModel({quizId, question});
         await newQuestion.save();
-        return res.json({success: true, message: "Question saved successfully."})
+        
+        // Return the created question with its ID - THIS IS THE KEY FIX
+        return res.json({
+            success: true, 
+            question: newQuestion, // Frontend needs this to get the real question ID
+            message: "Question saved successfully."
+        })
     } catch (error) {
         return res.json({success: false, message: error.message})
     }
 }
 
-export const postOption = async (req, res) =>{
+export const putQuestion = async (req, res) =>{
+    const {questionId, question} = req.body;
+    if(!questionId || !question){
+        return res.json({success: false, message: "Missing details."})
+    }
+    try {
+        const editedQuestion = await findOneAndUpdate({questionId}, {question});
+        if(!editedQuestion){
+            return res.json({success: false, message: "Could not edit question"})
+        }
+        return res.json({success: true, message: "Edited question successfully"})
+        
+    } catch (error) {
+        return res.json({success: false, message: error.message})
+    }
+}
+
+export const deleteQuestion = async (req, res) =>{
+    const {questionId} = req.body;
+    if(!questionId){
+        return res.json({success: false, message: "Question Id not found."})
+    }
+    try {
+        const deletedQuestion = await findOneAndDelete({questionId});
+        if (!deletedQuestion){
+            return res.json({success: false, message: "Question could not be deleted."})
+        }
+        return res.json({success: false, message: "Question deleted successfully."})
+
+    } catch (error) {
+        return res.json({success: false, message: error.message})
+    }
+}
+
+
+export const postOption = async (req, res) => {
     const {questionId, option, isCorrect} = req.body;
     if(!questionId || !option) {
         return res.json({success: false, message: "Missing details."});
     }
     try {
-        const valid = QuestionModel.findById(questionId);
+        const valid = await QuestionModel.findById(questionId);
         if(!valid){
             return res.json({success: false, message: "The question does not exist."});
         }
@@ -51,7 +127,27 @@ export const postOption = async (req, res) =>{
     } catch (error) {
         return res.json({success: false, message: error.message})
     }
-    
+}
+
+export const putOption = async(req, res) =>{
+    const {optionId, option} = req.body;
+    if(!optionId) {
+        return res.json({success: false, message: "Option id not found."})
+    }
+    try {
+        const editedOption = await findOneAndUpdate({optionId}, {option});
+        if(!editedOption){
+            return res.json({success: false, message: "Option could not be edited."});
+        }
+        return res.json({success: true, message: "Option added successfully."})
+        
+    } catch (error) {
+        return res.json({success: false, message: error.message})
+    }
+
+}
+export const deleteOption = async(req, res) =>{
+
 }
 
 export const getPrivateQuizzes = async (req, res) => {
@@ -59,8 +155,6 @@ export const getPrivateQuizzes = async (req, res) => {
 
     try {
         const quizzes = await QuizModel.find();
-
-        // Filter quizzes where the userId is in allowedUsers array
         const allowedQuizzes = quizzes.filter(quiz =>
             quiz.allowedUsers.includes(userId)
         );
@@ -87,6 +181,15 @@ export const getQuiz = async (req, res) =>{
         if(!quiz) {
             return res.json({success:false, message: "Could not find quiz."})
         }
+        const user = await UserModel.findById(quiz.createdBy);
+        if(!user) {
+            return res.json({success: false, message: "User not found."})
+        }
+        const author = user.username;
+        const authorId = quiz.createdBy;
+        const title = quiz.title;
+        const description = quiz.description;
+
         const questions = await QuestionModel.find({ quizId });
         const questionsWithOptions = await Promise.all(
             questions.map(async(question)=>{
@@ -95,7 +198,7 @@ export const getQuiz = async (req, res) =>{
             })
         );
 
-        return res.json({success: true, totalQuestions: questions.length, question: questionsWithOptions});
+        return res.json({success: true, title, description, author, authorId, totalQuestions: questions.length, question: questionsWithOptions});
     } catch (error) {
         return res.json({success: false, message: error.message});
     }

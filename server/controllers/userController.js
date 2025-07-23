@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from 'crypto'
 import transporter from "../config/nodemailer.js";
+import { QuizModel } from "../models/quizModel.js";
 
 export const register = async (req, res) =>{
     const {name, username, email, password} = req.body;
@@ -55,7 +56,7 @@ export const login = async(req, res) =>{
             sameSite: process.env.NODE_ENV === 'production'?'none':'strict',
             maxAge: 7*60*60*1000
         })
-        return res.json({success: true, message:"Login Successful."})
+        return res.json({success: true, id: user._id, message:"Login Successful."})
         
         
     } catch (error) {
@@ -69,7 +70,6 @@ export const logout = async(req, res) =>{
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production'?'none':'strict',
-            maxAge: 7*60*60*1000
         })
         return res.json({success: true, message: "Logout successful."})
         
@@ -146,6 +146,40 @@ export const resetPassword = async (req, res) =>{
 
         await user.save();
         return res.json({success: true, message: 'Password has been reset successfully'});
+        
+    } catch (error) {
+        return res.json({success: false, message: error.message});
+    }
+}
+
+export const getMyQuizzes = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const myQuizzes = await QuizModel.find({ createdBy: userId });
+
+    return res.json({
+      success: true,
+      myQuizzes,
+      message: "My quizzes fetched successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Server error",
+    });
+  }
+};
+
+
+export const myDetails = async (req, res) =>{
+    const userId = req.userId;
+    try {
+        const user = await UserModel.findOne({_id:userId});
+        if(!user){
+            return res.json({success: false, message: "User not found."});
+        }
+        return res.json({success: true, user, userId, message: "Logged in."});
         
     } catch (error) {
         return res.json({success: false, message: error.message});

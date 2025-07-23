@@ -7,6 +7,7 @@ axios.defaults.withCredentials = true;
 
 export const AppContextProvider = (props) =>{
     const backendUrl = process.env.REACT_APP_BACKEND_URL;
+    const [userId, setUserId] = useState(null);
     const [isLoggedin, setIsLoggedin] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -16,6 +17,7 @@ export const AppContextProvider = (props) =>{
             const res = await axios.get(backendUrl + '/api/user/check-auth')
             if(res.data.success) {
                 setIsLoggedin(true);
+                setUserId(res.data.userId);
             } else{
                 setIsLoggedin(false);
                 if(res.data.message !== "Not authorized. Try Again."){
@@ -36,6 +38,7 @@ export const AppContextProvider = (props) =>{
 
     const value = {
         backendUrl,
+        userId, setUserId,
         isLoggedin, setIsLoggedin,
         loading
     };
