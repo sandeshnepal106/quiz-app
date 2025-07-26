@@ -41,7 +41,7 @@ export const deleteQuiz = async (req, res) =>{
         return res.json({success: false, message: "Quiz id not given."})
     }
     try{
-        const deletedQuiz = await QuizModel.findOneAndDelete({quizId});
+        const deletedQuiz = await QuizModel.findOneAndDelete({ _id: quizId });
         if(!deletedQuiz){
             return res.json({success: false, message: "Quiz not deleted."});
         }
@@ -82,7 +82,7 @@ export const putQuestion = async (req, res) =>{
         return res.json({success: false, message: "Missing details."})
     }
     try {
-        const editedQuestion = await findOneAndUpdate({questionId}, {question});
+        const editedQuestion = await QuestionModel.findOneAndUpdate({ _id: questionId }, { question }, { new: true });
         if(!editedQuestion){
             return res.json({success: false, message: "Could not edit question"})
         }
@@ -99,11 +99,13 @@ export const deleteQuestion = async (req, res) =>{
         return res.json({success: false, message: "Question Id not found."})
     }
     try {
-        const deletedQuestion = await findOneAndDelete({questionId});
+        const deletedQuestion = await QuestionModel.findOneAndDelete({ _id: questionId });
+;
         if (!deletedQuestion){
             return res.json({success: false, message: "Question could not be deleted."})
         }
-        return res.json({success: false, message: "Question deleted successfully."})
+        return res.json({success: true, message: "Question deleted successfully."});
+
 
     } catch (error) {
         return res.json({success: false, message: error.message})
@@ -146,9 +148,22 @@ export const putOption = async(req, res) =>{
     }
 
 }
-export const deleteOption = async(req, res) =>{
+export const deleteOption = async (req, res) => {
+  const { optionId } = req.body;
+  if (!optionId) {
+    return res.json({ success: false, message: "Option ID not provided." });
+  }
+  try {
+    const deletedOption = await OptionModel.findOneAndDelete({ _id: optionId });
+    if (!deletedOption) {
+      return res.json({ success: false, message: "Option not found or already deleted." });
+    }
+    return res.json({ success: true, message: "Option deleted successfully." });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+};
 
-}
 
 export const getPrivateQuizzes = async (req, res) => {
     const userId = req.userId;

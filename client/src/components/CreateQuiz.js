@@ -231,209 +231,211 @@ function CreateQuiz() {
     setIsQuestionFormExpanded(false);
   };
 
-  return (
-    <div className="p-4 max-w-2xl mx-auto font-sans">
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center">
-        Unleash Your Inner Quiz Master! 🚀
-      </h1>
+ return (
+  <div className="p-4 max-w-2xl mx-auto font-sans text-gray-800 dark:text-gray-100">
+    <h1 className="text-4xl font-extrabold mb-8 text-center text-gray-800 dark:text-gray-100">
+      Unleash Your Inner Quiz Master! 🚀
+    </h1>
 
-      {/* Quiz Creation Form (Step 1) */}
-      <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">
-          {quizId ? 'Quiz Details (Created)' : 'Create Your Quiz'}
-        </h2>
-        {quizId && (
-          <p className="text-green-600 mb-4 font-medium">Quiz ID: {quizId}</p>
-        )}
+    {/* Quiz Creation Form */}
+    <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-600">
+      <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">
+        {quizId ? 'Quiz Details (Created)' : 'Create Your Quiz'}
+      </h2>
 
-        {/* Quiz Title Input - Facebook-like expandable */}
-        <div ref={quizFormRef} className="relative transition-all duration-300 ease-in-out">
-          <input
-            type="text"
-            placeholder="What's your quiz about? (e.g., 'History Trivia')"
-            className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg transition-all duration-300 ease-in-out
-              ${isQuizFormExpanded ? 'mb-4' : 'mb-0'}`}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onFocus={() => setIsQuizFormExpanded(true)}
-            disabled={step > 1} // Disable once quiz is created
-          />
+      {quizId && (
+        <p className="text-green-600 dark:text-green-400 mb-4 font-medium">
+          Quiz ID: {quizId}
+        </p>
+      )}
 
-          {isQuizFormExpanded && step === 1 && (
-            <div className="space-y-4 pt-2">
-              <textarea
-                placeholder="Give a short description (optional)"
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                rows="3"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+      <div ref={quizFormRef}>
+        <input
+          type="text"
+          placeholder="What's your quiz about?"
+          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+            ${isQuizFormExpanded ? 'mb-4' : 'mb-0'}`}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onFocus={() => setIsQuizFormExpanded(true)}
+          disabled={step > 1}
+        />
+
+        {isQuizFormExpanded && step === 1 && (
+          <div className="space-y-4 pt-2">
+            <textarea
+              placeholder="Give a short description (optional)"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              rows="3"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Tags (e.g., science, fun)"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="private"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="h-5 w-5 text-blue-600 dark:bg-gray-600 dark:border-gray-500"
               />
+              <label htmlFor="private" className="text-gray-700 dark:text-gray-300 select-none">
+                Make this quiz private
+              </label>
+            </div>
+            {isPrivate && (
               <input
                 type="text"
-                placeholder="Tags (e.g., science, fun, movies)"
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                placeholder="Allowed User Emails (comma separated)"
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                value={allowedUsers}
+                onChange={(e) => setAllowedUsers(e.target.value)}
               />
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="private"
-                  checked={isPrivate}
-                  onChange={(e) => setIsPrivate(e.target.checked)}
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="private" className="text-gray-700 select-none">Make this quiz private</label>
-              </div>
-              {isPrivate && (
-                <input
-                  type="text"
-                  placeholder="Allowed User Emails (comma separated)"
-                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={allowedUsers}
-                  onChange={(e) => setAllowedUsers(e.target.value)}
-                />
-              )}
-              <div className="flex justify-end pt-4">
-                <button
-                  onClick={createQuiz}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
-                >
-                  Create Quiz
-                </button>
-              </div>
+            )}
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={createQuiz}
+                className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Create Quiz
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+    </div>
 
-      <hr className="my-8 border-gray-300" />
+    <hr className="my-8 border-gray-300 dark:border-gray-600" />
 
-      {/* Question Addition Form (Step 2) */}
-      {step >= 2 && quizId && (
-        <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4 flex items-center justify-between">
-            <span>Add Questions</span>
-            <span className="text-sm text-gray-500 font-normal">
-              Total Questions: {addedQuestions.length}
-            </span>
-          </h2>
+    {/* Question Addition */}
+    {step >= 2 && quizId && (
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-600">
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4 flex justify-between">
+          <span>Add Questions</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            Total Questions: {addedQuestions.length}
+          </span>
+        </h2>
 
-          <div ref={questionFormRef} className="relative transition-all duration-300 ease-in-out">
-            <textarea
-              placeholder="Type your question here..."
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-lg transition-all duration-300 ease-in-out
-                ${isQuestionFormExpanded ? 'mb-4' : 'h-12 resize-none overflow-hidden pb-3'} `}
-              rows={isQuestionFormExpanded ? "3" : "1"}
-              value={questionText}
-              onChange={(e) => setQuestionText(e.target.value)}
-              onFocus={() => setIsQuestionFormExpanded(true)}
-              // Disable if on Step 3 (options phase)
-              disabled={step === 3}
-            />
+        <textarea
+          placeholder="Type your question here..."
+          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+            ${isQuestionFormExpanded ? 'mb-4' : 'h-12 resize-none overflow-hidden pb-3'}`}
+          rows={isQuestionFormExpanded ? "3" : "1"}
+          value={questionText}
+          onChange={(e) => setQuestionText(e.target.value)}
+          onFocus={() => setIsQuestionFormExpanded(true)}
+          disabled={step === 3}
+        />
 
-            {isQuestionFormExpanded && step === 2 && (
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={submitQuestion}
-                  className="bg-green-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200"
-                >
-                  Save Question
-                </button>
-                {addedQuestions.length > 0 && (
-                  <button
-                    onClick={finishQuiz}
-                    className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
-                  >
-                    Finish Quiz
-                  </button>
-                )}
-              </div>
+        {isQuestionFormExpanded && step === 2 && (
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={submitQuestion}
+              className="bg-green-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              Save Question
+            </button>
+            {addedQuestions.length > 0 && (
+              <button
+                onClick={finishQuiz}
+                className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Finish Quiz
+              </button>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    )}
 
-      {/* Options Addition Form (Step 3) */}
-      {step === 3 && currentQuestionId && (
-        <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-700 mb-4">
-            Options for: <br />
-            <span className="text-blue-600 text-lg font-normal italic">
-              "{addedQuestions.find(q => q._id === currentQuestionId)?.question || 'Last Question'}"
-            </span>
-          </h3>
+    {/* Step 3 - Add Options */}
+    {step === 3 && currentQuestionId && (
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-600">
+        <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">
+          Options for:
+          <br />
+          <span className="text-blue-600 dark:text-blue-400 text-lg font-normal italic">
+            "{addedQuestions.find(q => q._id === currentQuestionId)?.question}"
+          </span>
+        </h3>
 
-          <div className="space-y-3">
-            {options.map((opt, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="correct-option" // Ensure only one correct option can be selected
-                  checked={opt.isCorrect}
-                  onChange={() => setCorrectOption(idx)}
-                  className="h-5 w-5 text-purple-600 focus:ring-purple-500"
-                />
-                <input
-                  type="text"
-                  placeholder={`Option ${idx + 1}`}
-                  value={opt.text}
-                  onChange={(e) => updateOptionText(idx, e.target.value)}
-                  className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-                {options.length > 2 && ( // Allow removal only if more than 2 options
-                  <button
-                    onClick={() => removeOptionField(idx)}
-                    className="text-red-600 hover:text-red-800 text-xl font-bold p-1 rounded-full hover:bg-red-50 transition-colors"
-                    title="Remove option"
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-            ))}
+        {options.map((opt, idx) => (
+          <div key={idx} className="flex items-center gap-3">
+            <input
+              type="radio"
+              name="correct-option"
+              checked={opt.isCorrect}
+              onChange={() => setCorrectOption(idx)}
+              className="h-5 w-5 text-purple-600 dark:bg-gray-700 dark:border-gray-500"
+            />
+            <input
+              type="text"
+              placeholder={`Option ${idx + 1}`}
+              value={opt.text}
+              onChange={(e) => updateOptionText(idx, e.target.value)}
+              className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+            />
+            {options.length > 2 && (
+              <button
+                onClick={() => removeOptionField(idx)}
+                className="text-red-600 hover:text-red-800 text-xl font-bold p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
+              >
+                &times;
+              </button>
+            )}
           </div>
+        ))}
 
+        <button
+          onClick={addOptionField}
+          className="text-blue-600 dark:text-blue-400 underline text-md my-4 flex items-center gap-1 hover:text-blue-800 dark:hover:text-blue-300"
+        >
+          <span className="text-xl leading-none">+</span> Add another option
+        </button>
+
+        <div className="flex justify-end gap-3 pt-4">
           <button
-            onClick={addOptionField}
-            className="text-blue-600 underline text-md my-4 flex items-center gap-1 hover:text-blue-800 transition-colors"
+            onClick={submitOptions}
+            className="bg-purple-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <span className="text-xl leading-none">+</span> Add another option
+            Save Options
           </button>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={submitOptions}
-              className="bg-purple-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200"
-            >
-              Save Options
-            </button>
-            <button
-              onClick={addAnotherQuestion}
-              className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
-            >
-              Add Next Question
-            </button>
-          </div>
+          <button
+            onClick={addAnotherQuestion}
+            className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Add Next Question
+          </button>
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Show added questions summary */}
-      {addedQuestions.length > 0 && (
-        <div className="mt-8 p-6 bg-blue-50 rounded-lg shadow-inner border border-blue-200">
-          <h3 className="text-xl font-bold text-blue-800 mb-4">Your Quiz So Far:</h3>
-          <ul className="space-y-2">
-            {addedQuestions.map((q, idx) => (
-              <li key={q._id} className="flex items-start">
-                <span className="font-semibold text-blue-700 mr-2">{idx + 1}.</span>
-                <span className="text-gray-800">{q.question}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
+    {/* Added Question Summary */}
+    {addedQuestions.length > 0 && (
+      <div className="mt-8 p-6 bg-blue-50 dark:bg-gray-900 rounded-lg shadow-inner border border-blue-200 dark:border-blue-600">
+        <h3 className="text-xl font-bold text-blue-800 dark:text-blue-300 mb-4">
+          Your Quiz So Far:
+        </h3>
+        <ul className="space-y-2">
+          {addedQuestions.map((q, idx) => (
+            <li key={q._id} className="flex items-start">
+              <span className="font-semibold text-blue-700 dark:text-blue-400 mr-2">{idx + 1}.</span>
+              <span className="text-gray-800 dark:text-gray-200">{q.question}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+);
+
 }
 
 export default CreateQuiz;

@@ -10,6 +10,7 @@ axios.defaults.withCredentials = true;
 export const AppContextProvider = (props) => {
     const backendUrl = process.env.REACT_APP_BACKEND_URL;
     const [userId, setUserId] = useState(null);
+    const [profilePic, setProfilePic] = useState('');
     const [isLoggedin, setIsLoggedin] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -35,6 +36,7 @@ export const AppContextProvider = (props) => {
             const res = await axios.get(backendUrl + '/api/user/check-auth');
             if (res.data.success) {
                 setIsLoggedin(true);
+                setProfilePic(res.data.profilePic)
                 setUserId(res.data.userId);
             } else {
                 setIsLoggedin(false);
@@ -58,6 +60,7 @@ export const AppContextProvider = (props) => {
         backendUrl,
         userId, setUserId,
         isLoggedin, setIsLoggedin,
+        profilePic, setProfilePic,
         loading,
         userFollowDetails,   // --- NEW: Provide the global state ---
         updateFollowDetails  // --- NEW: Provide the updater function ---

@@ -1,5 +1,5 @@
 import express from "express";
-import { getPrivateQuizzes, getQuiz, postOption, postQuestion, postQuiz } from "../controllers/quizController.js";
+import { deleteQuestion, deleteQuiz, getPrivateQuizzes, getQuiz, postOption, postQuestion, postQuiz, putQuestion, putQuiz } from "../controllers/quizController.js";
 import { attempt } from "../controllers/attemptController.js";
 import authCheck from "../middlewares/authCheck.js";
 import { getUserFeed } from "../controllers/feedController.js";
@@ -8,7 +8,13 @@ import { deleteComment, deleteLike, getLike, postComment, postLike } from "../co
 const quizRouter = express.Router();
 
 quizRouter.post('/post-quiz', authCheck, postQuiz);
+quizRouter.put('/put-quiz', authCheck, putQuiz);
+quizRouter.delete('/delete-quiz', authCheck, deleteQuiz);
+
 quizRouter.post('/post-question', authCheck, postQuestion);
+quizRouter.put('/put-question', authCheck, putQuestion);
+quizRouter.delete('/delete-question', authCheck, deleteQuestion);
+
 quizRouter.post('/post-option', authCheck, postOption);
 quizRouter.post('/attempt', authCheck, attempt);
 

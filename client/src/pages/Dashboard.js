@@ -82,79 +82,80 @@ const Dashboard = () => {
   }, [handleScroll]);
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4">Your Quiz Feed</h2>
+  <div className="p-4 max-w-4xl mx-auto text-gray-800 dark:text-gray-100">
+    <h2 className="text-2xl font-semibold mb-4">Your Quiz Feed</h2>
 
-      {quizzes.length === 0 && !loading ? (
-  <div className="text-center text-gray-500 text-lg mt-10">
-    No quizzes found for your feed.
-  </div>
-) : (
-  <div className="space-y-6">
-    {quizzes.map((quiz) => (
-      <div
-        key={quiz._id}
-        className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition duration-300 flex flex-col justify-center"
-      >
-        {/* Title & Like */}
-        <div className="flex items-start justify-between mb-4 pt-4">
-          <div className='flex flex-col justify-between gap-y-2'>
-            <h3
-              className="text-2xl font-semibold text-gray-800 hover:underline cursor-pointer"
-              onClick={() => goToQuiz(quiz._id)}
-            >
-              {quiz.title}
-            </h3>
-            <p className="text-gray-700 text-base mb-4">
-          {quiz.description}
-        </p>
-          </div>
-          <LikeQuiz quizId={quiz._id} />
-        </div>
-
-        {/* Description */}
-        
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {quiz.tags.map((tag, idx) => (
-            <span
-              key={`${quiz._id}-tag-${idx}`}
-              className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-
-        {/* Footer: Posted by & Follow */}
-        <div className="flex items-center justify-between border-t pt-4">
-          <div className="text-sm text-gray-600">
-            Posted by{' '}
-            <span
-              onClick={() => goToProfile(quiz.createdBy?._id)}
-              className="font-medium text-blue-600 hover:underline cursor-pointer"
-            >
-              {quiz.createdBy?.name} (@{quiz.createdBy?.username})
-            </span>
-          </div>
-          <FollowUser followingId={quiz.createdBy?._id} profilepage={false} />
-        </div>
+    {quizzes.length === 0 && !loading ? (
+      <div className="text-center text-gray-500 dark:text-gray-400 text-lg mt-10">
+        No quizzes found for your feed.
       </div>
-    ))}
+    ) : (
+      <div className="space-y-6">
+        {quizzes.map((quiz) => (
+          <div
+            key={quiz._id}
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-md hover:shadow-lg transition duration-300 flex flex-col justify-center"
+          >
+            {/* Title & Like */}
+            <div className="flex items-start justify-between mb-4 pt-4">
+              <div className="flex flex-col justify-between gap-y-2">
+                <h3
+                  className="text-2xl font-semibold text-gray-800 dark:text-gray-100 hover:underline cursor-pointer"
+                  onClick={() => goToQuiz(quiz._id)}
+                >
+                  {quiz.title}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 text-base mb-4">
+                  {quiz.description}
+                </p>
+              </div>
+              <LikeQuiz quizId={quiz._id} />
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {quiz.tags.map((tag, idx) => (
+                <span
+                  key={`${quiz._id}-tag-${idx}`}
+                  className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm px-3 py-1 rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Posted by{' '}
+                <span
+                  onClick={() => goToProfile(quiz.createdBy?._id)}
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                >
+                  {quiz.createdBy?.name} (@{quiz.createdBy?.username})
+                </span>
+              </div>
+              <FollowUser followingId={quiz.createdBy?._id} profilepage={false} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {loading && (
+      <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+        Loading more quizzes...
+      </div>
+    )}
+
+    {!hasMore && quizzes.length > 0 && (
+      <div className="text-center text-sm text-gray-400 dark:text-gray-500 mt-6">
+        You've reached the end of the feed.
+      </div>
+    )}
   </div>
-)}
+);
 
-
-      {loading && (
-        <div className="text-center py-6 text-sm text-gray-500">Loading more quizzes...</div>
-      )}
-
-      {!hasMore && quizzes.length > 0 && (
-        <div className="text-center text-sm text-gray-400 mt-6">You've reached the end of the feed.</div>
-      )}
-    </div>
-  );
 };
 
 export default Dashboard;

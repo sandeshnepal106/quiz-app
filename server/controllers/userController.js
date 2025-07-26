@@ -56,7 +56,7 @@ export const login = async(req, res) =>{
             sameSite: process.env.NODE_ENV === 'production'?'none':'strict',
             maxAge: 7*60*60*1000
         })
-        return res.json({success: true, id: user._id, message:"Login Successful."})
+        return res.json({success: true, id: user._id, profilePic: user.profilePic, message:"Login Successful."})
         
         
     } catch (error) {
@@ -99,18 +99,27 @@ export const editProfile = async(req, res) =>{
     }
 }
 
-export const checkAuth = async (req, res) =>{
-    try {
-        const userId = req.userId;
-        if(!userId) {
-            return res.json({success: false, message: "User Id not found."});
-        }
-        return res.json({success: true, userId, message: "Logged in."});
-        
-    } catch (error) {
-        return res.json({success: false, message: error.message});
+export const checkAuth = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.json({ success: false, message: "User Id not found." });
     }
-}
+
+    const { profilePic } = await UserModel.findById(userId).select('profilePic');
+
+    return res.json({
+      success: true,
+      userId,
+      profilePic,
+      message: "Logged in."
+    });
+
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+};
+
 
 export const sendResetOtp = async (req, res) =>{
     const {email} = req.body;

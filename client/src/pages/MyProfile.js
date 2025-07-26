@@ -18,7 +18,7 @@ function MyProfile() {
     password: ''
   });
 
-  const { backendUrl } = useContext(AppContext);
+  const { backendUrl,} = useContext(AppContext);
 
   const getMyDetails = async () => {
     try {
@@ -135,121 +135,126 @@ const handleProfilePicChange = async (e) => {
   };
 
   return (
-    <div>
-      <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-2xl border">
-        <div className="flex items-center space-x-6">
-          <div className="relative">
-            {myDetails.profilePic ? (
-              <img
-                src={myDetails.profilePic}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover border"
-              />
-            ) : (
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-3xl font-bold text-gray-600">
-                {myDetails.name?.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <label className="absolute bottom-0 right-0 bg-black bg-opacity-60 text-white p-1 rounded-full cursor-pointer text-xs hover:bg-opacity-80">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              ✎
-            </label>
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-bold">{myDetails.name}</h1>
-            <p className="text-gray-600">@{myDetails.username}</p>
-            <FollowUser followingId={myDetails._id} />
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-3 text-gray-700">
-          <p><span className="font-semibold">Email:</span> {myDetails.email}</p>
-        </div>
-
-        <div className="mt-6 text-right">
-          <button
-            onClick={() => setShowEdit(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Edit Profile
-          </button>
-
-          {showEdit && (
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <input
-                type="text"
-                name="name"
-                value={editForm.name}
-                onChange={handleChange}
-                placeholder="Name"
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="text"
-                name="username"
-                value={editForm.username}
-                onChange={handleChange}
-                placeholder="Username"
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="email"
-                name="email"
-                value={editForm.email}
-                onChange={handleChange}
-                placeholder="Email"
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="password"
-                name="password"
-                value={editForm.password}
-                onChange={handleChange}
-                placeholder="New Password"
-                className="w-full border p-2 rounded"
-              />
-              <div className="text-right">
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
+  <div>
+    {/* Profile Card */}
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white dark:bg-gray-900 shadow-xl rounded-2xl border dark:border-gray-700">
+      <div className="flex items-center space-x-6">
+        <div className="relative">
+          {myDetails.profilePic ? (
+            <img
+              src={myDetails.profilePic}
+              alt="Profile"
+              className="w-24 h-24 rounded-full object-cover border dark:border-gray-600"
+            />
+          ) : (
+            <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-3xl font-bold text-gray-600 dark:text-gray-300">
+              {myDetails.name?.charAt(0).toUpperCase()}
+            </div>
           )}
+          <label className="absolute bottom-0 right-0 bg-black bg-opacity-60 text-white p-1 rounded-full cursor-pointer text-xs hover:bg-opacity-80">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            ✎
+          </label>
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{myDetails.name}</h1>
+          <p className="text-gray-600 dark:text-gray-400">@{myDetails.username}</p>
+          <FollowUser followingId={myDetails._id} />
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-2xl border mb-16">
-        <h2 className="text-xl font-bold mb-4">My Quizzes</h2>
-        {myQuizzes.length === 0 ? (
-          <p className="text-gray-500">You haven't created any quizzes yet.</p>
-        ) : (
-          <ul className="space-y-4">
-            {myQuizzes.map((quiz) => (
-              <li
-                key={quiz._id}
-                className="border p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer flex justify-between"
+      <div className="mt-6 space-y-3 text-gray-700 dark:text-gray-300">
+        <p><span className="font-semibold">Email:</span> {myDetails.email}</p>
+      </div>
+
+      <div className="mt-6 text-right">
+        <button
+          onClick={() => setShowEdit(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Edit Profile
+        </button>
+
+        {showEdit && (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <input
+              type="text"
+              name="name"
+              value={editForm.name}
+              onChange={handleChange}
+              placeholder="Name"
+              className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white p-2 rounded"
+            />
+            <input
+              type="text"
+              name="username"
+              value={editForm.username}
+              onChange={handleChange}
+              placeholder="Username"
+              className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white p-2 rounded"
+            />
+            <input
+              type="email"
+              name="email"
+              value={editForm.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white p-2 rounded"
+            />
+            <input
+              type="password"
+              name="password"
+              value={editForm.password}
+              onChange={handleChange}
+              placeholder="New Password"
+              className="w-full border dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white p-2 rounded"
+            />
+            <div className="text-right">
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
               >
-                <div onClick={() => goToQuiz(quiz._id)}>
-                  <h3 className="text-lg font-semibold">{quiz.title}</h3>
-                  <p className="text-sm text-gray-600">Created on: {new Date(quiz.createdAt).toLocaleDateString()}</p>
-                </div>
-                <LikeQuiz quizId={quiz._id} />
-              </li>
-            ))}
-          </ul>
+                Save Changes
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>
-  );
+
+    {/* My Quizzes */}
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white dark:bg-gray-900 shadow-xl rounded-2xl border dark:border-gray-700 mb-16">
+      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">My Quizzes</h2>
+      {myQuizzes.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400">You haven't created any quizzes yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {myQuizzes.map((quiz) => (
+            <li
+              key={quiz._id}
+              className="border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer flex justify-between"
+            >
+              <div onClick={() => goToQuiz(quiz._id)}>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{quiz.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Created on: {new Date(quiz.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <LikeQuiz quizId={quiz._id} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+);
+
 }
 
 export default MyProfile;

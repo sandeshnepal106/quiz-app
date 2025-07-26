@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import LikeQuiz from '../components/LikeQuiz';
 
 function MyAttempts() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { backendUrl } = useContext(AppContext);
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,36 +30,45 @@ function MyAttempts() {
     fetchAttempts();
   }, []);
 
-  const goToQuiz = (quizId, attemptId) =>{
+  const goToQuiz = (quizId, attemptId) => {
     navigate(`/quiz/${quizId}?attemptId=${attemptId}`);
-  }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 text-gray-800 dark:text-gray-100">
       <h2 className="text-2xl font-bold mb-6">My Quiz Attempts</h2>
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       ) : attempts.length === 0 ? (
-        <p className="text-gray-500">You haven't attempted any quizzes yet.</p>
+        <p className="text-gray-500 dark:text-gray-400">You haven't attempted any quizzes yet.</p>
       ) : (
         <div className="grid gap-4">
           {attempts.map((attempt, index) => (
             <div
               key={attempt.attemptId || index}
-              className="border rounded-lg shadow-sm p-4 hover:shadow-md transition" 
+              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition flex justify-between items-center bg-white dark:bg-gray-800 dark:border-gray-700"
             >
-              <div className='flex justify-between'>
-                <h3 className="text-lg font-semibold p-1"  onClick={()=>goToQuiz(attempt.quizId, attempt.attemptId)}>{attempt.quizTitle}</h3>
-                <LikeQuiz quizId={attempt.quizId}/>
+              <div
+                className="flex flex-col cursor-pointer"
+                onClick={() => goToQuiz(attempt.quizId, attempt.attemptId)}
+              >
+                <h3 className="text-lg font-semibold p-1">{attempt.quizTitle}</h3>
+                <p className="text-md italic text-gray-700 dark:text-gray-300 p-1">
+                  {attempt.quizDescription}
+                </p>
+                <p className="text-sm italic text-gray-600 dark:text-gray-400 p-1">
+                  Created By: {attempt.createdBy}
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 p-1">
+                  Score: {attempt.score}/100
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 p-1">
+                  Date: {new Date(attempt.date).toLocaleString()}
+                </p>
               </div>
-              <p className='text-md text-gray-200 italic p-1'>{attempt.description}</p>
-              <p className="text-sm text-gray-600 italic p-1">Created By: {attempt.createdBy}</p>
-              <p className="text-sm text-gray-600 p-1">Score: {attempt.score}/100</p>
-              <p className="text-sm text-gray-600 p-1 ">
-                Date: {new Date(attempt.date).toLocaleString()}
-              </p>
-              
+
+              <LikeQuiz quizId={attempt.quizId} />
             </div>
           ))}
         </div>
