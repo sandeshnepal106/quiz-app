@@ -4,7 +4,7 @@ import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
 function CreateQuiz() {
-  const { backendUrl } = useContext(AppContext);
+  const { backendUrl, authToken } = useContext(AppContext); // Ensure authToken is available
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -16,15 +16,30 @@ function CreateQuiz() {
   const [addedQuestions, setAddedQuestions] = useState([]);
   const [options, setOptions] = useState([{ text: '', isCorrect: false }]);
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
+
+  // State to manage expansion of the input fields
+  const [isQuizFormExpanded, setIsQuizFormExpanded] = useState(false);
+  const [isQuestionFormExpanded, setIsQuestionFormExpanded] = useState(false);
+
+  const quizFormRef = useRef();
   const questionFormRef = useRef();
 
+  // Scroll to expanded form when state changes
   useEffect(() => {
-    if (step === 3) scrollToQuestionForm();
-  }, [step]);
+    if (isQuizFormExpanded && quizFormRef.current) {
+      quizFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isQuizFormExpanded]);
 
-  const scrollToQuestionForm = () => {
-    questionFormRef?.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  useEffect(() => {
+    if (isQuestionFormExpanded && questionFormRef.current) {
+      questionFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isQuestionFormExpanded]);
+
+  // Handle outside clicks to collapse forms (optional, but good UX)
+  // For simplicity, we'll keep them expanded once clicked in this version.
+  // A more robust solution would involve a custom hook for click outside.
 
   const createQuiz = async () => {
     if (!title.trim()) {
@@ -33,9 +48,8 @@ function CreateQuiz() {
     }
 
     try {
-      // Convert comma-separated strings to arrays
-      const tagsArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
-      const allowedUsersArray = allowedUsers ? allowedUsers.split(',').map(user => user.trim()) : [];
+      const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '') : [];
+      const allowedUsersArray = allowedUsers ? allowedUsers.split(',').map(user => user.trim()).filter(user => user !== '') : [];
 
       const res = await axios.post(`${backendUrl}/api/quiz/post-quiz`, {
         title,
@@ -43,16 +57,24 @@ function CreateQuiz() {
         tags: tagsArray,
         isPrivate,
         allowedUsers: allowedUsersArray,
-      }, { withCredentials: true });
+      }, {
+        headers: {
+          'Authorization': `Bearer ${authToken}` // Pass token for authentication
+        },
+        withCredentials: true // Include cookies/credentials if needed
+      });
 
       if (res.data.success) {
         toast.success(res.data.message || 'Quiz created!');
-        setQuizId(res.data.data._id); // Backend returns quiz in 'data' field
-        setStep(2);
+        setQuizId(res.data.data._id);
+        setStep(2); // Move to question adding
+        setIsQuizFormExpanded(false); // Collapse quiz form after creation
+        setIsQuestionFormExpanded(true); // Auto-expand question form
       } else {
         toast.error(res.data.message || 'Failed to create quiz.');
       }
     } catch (err) {
+      console.error('Error creating quiz:', err);
       toast.error(err.response?.data?.message || 'Failed to create quiz.');
     }
   };
@@ -67,34 +89,29 @@ function CreateQuiz() {
       const res = await axios.post(`${backendUrl}/api/quiz/post-question`, {
         quizId,
         question: questionText,
-      }, { withCredentials: true });
+      }, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        },
+        withCredentials: true
+      });
 
       if (res.data.success) {
         toast.success(res.data.message || 'Question added!');
-        
-        // Use the real question object returned from backend
-        if (res.data.question) {
-          const newQuestion = res.data.question;
-          setAddedQuestions(prev => [...prev, newQuestion]);
-          setCurrentQuestionId(newQuestion._id);
-        } else {
-          // Fallback if backend doesn't return question
-          const newQuestion = {
-            _id: Date.now().toString(),
-            question: questionText,
-            quizId
-          };
-          setAddedQuestions(prev => [...prev, newQuestion]);
-          setCurrentQuestionId(newQuestion._id);
-        }
-        
-        setQuestionText('');
-        setStep(3);
-        scrollToQuestionForm();
+        const newQuestion = res.data.question || { _id: Date.now().toString(), question: questionText, quizId };
+        setAddedQuestions(prev => [...prev, newQuestion]);
+        setCurrentQuestionId(newQuestion._id);
+
+        setQuestionText(''); // Clear question text for next question
+        setOptions([{ text: '', isCorrect: false }]); // Reset options for next question
+        setStep(3); // Move to options adding
+        setIsQuestionFormExpanded(false); // Collapse question form
+        // Options form implicitly shown by step 3
       } else {
         toast.error(res.data.message || 'Failed to add question.');
       }
     } catch (err) {
+      console.error('Error adding question:', err);
       toast.error(err.response?.data?.message || 'Failed to add question.');
     }
   };
@@ -118,14 +135,15 @@ function CreateQuiz() {
   };
 
   const removeOptionField = (index) => {
-    if (options.length > 1) {
+    if (options.length > 2) { // Require at least 2 options
       const newOptions = options.filter((_, i) => i !== index);
       setOptions(newOptions);
+    } else {
+      toast.warn('You need at least two options.');
     }
   };
 
   const submitOptions = async () => {
-    // Validate options
     const filledOptions = options.filter(opt => opt.text.trim() !== '');
     if (filledOptions.length < 2) {
       toast.error('Please add at least 2 options.');
@@ -139,38 +157,47 @@ function CreateQuiz() {
     }
 
     try {
-      const currentQuestion = addedQuestions[addedQuestions.length - 1];
+      const currentQuestion = addedQuestions.find(q => q._id === currentQuestionId);
       if (!currentQuestion) {
-        toast.error('No question available to add options to.');
+        toast.error('No question selected to add options to.');
         return;
       }
+
+      // First, delete existing options for the question if any
+      // This is a common pattern if you're allowing re-editing options.
+      // If your backend handles upsert or ignores duplicates, you might not need this.
+      // For a fresh question, this step is effectively a no-op.
+      // await axios.delete(`${backendUrl}/api/quiz/delete-options/${currentQuestion._id}`, { withCredentials: true }); // Example delete route
 
       const promises = filledOptions.map(opt =>
         axios.post(`${backendUrl}/api/quiz/post-option`, {
           questionId: currentQuestion._id,
           option: opt.text,
           isCorrect: opt.isCorrect,
-        }, { withCredentials: true })
+        }, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          },
+          withCredentials: true
+        })
       );
 
       const results = await Promise.all(promises);
-      console.log('Results:', results.map(r => r.data)); // Debug log
-      
-      // Check if all requests were successful
+
       const allSuccessful = results.every(res => res.data.success);
-      
+
       if (allSuccessful) {
         toast.success('Options saved successfully!');
         setOptions([{ text: '', isCorrect: false }]); // Reset options
         setStep(2); // Go back to question step
+        setIsQuestionFormExpanded(true); // Re-expand question form for next question
       } else {
-        // Show specific error messages
-        const failedResults = results.filter(res => !res.data.success);
-        const errorMessages = failedResults.map(res => res.data.message).join(', ');
-        toast.error(`Failed to save some options: ${errorMessages}`);
+        const failedMessages = results.filter(res => !res.data.success)
+          .map(res => res.data.message || 'Unknown error').join(', ');
+        toast.error(`Failed to save some options: ${failedMessages}`);
       }
     } catch (err) {
-      console.error('Error saving options:', err); // Debug log
+      console.error('Error saving options:', err);
       toast.error(err.response?.data?.message || 'Failed to save options.');
     }
   };
@@ -178,12 +205,17 @@ function CreateQuiz() {
   const addAnotherQuestion = () => {
     setQuestionText('');
     setOptions([{ text: '', isCorrect: false }]);
-    setStep(2);
+    setStep(2); // Go back to the "Add Question" step
+    setIsQuestionFormExpanded(true); // Ensure question form is expanded
   };
 
   const finishQuiz = () => {
-    toast.success('Quiz created successfully!');
-    // Reset all states
+    if (addedQuestions.length === 0) {
+      toast.error('Please add at least one question before finishing the quiz.');
+      return;
+    }
+    toast.success('Quiz created successfully and ready!');
+    // Reset all states for a fresh start
     setStep(1);
     setTitle('');
     setDescription('');
@@ -195,162 +227,206 @@ function CreateQuiz() {
     setAddedQuestions([]);
     setOptions([{ text: '', isCorrect: false }]);
     setCurrentQuestionId(null);
+    setIsQuizFormExpanded(false);
+    setIsQuestionFormExpanded(false);
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Create Quiz</h1>
+    <div className="p-4 max-w-2xl mx-auto font-sans">
+      <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center">
+        Unleash Your Inner Quiz Master! 🚀
+      </h1>
 
-      {step === 1 && (
-        <div className="space-y-4">
+      {/* Quiz Creation Form (Step 1) */}
+      <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-700 mb-4">
+          {quizId ? 'Quiz Details (Created)' : 'Create Your Quiz'}
+        </h2>
+        {quizId && (
+          <p className="text-green-600 mb-4 font-medium">Quiz ID: {quizId}</p>
+        )}
+
+        {/* Quiz Title Input - Facebook-like expandable */}
+        <div ref={quizFormRef} className="relative transition-all duration-300 ease-in-out">
           <input
             type="text"
-            placeholder="Quiz Title *"
-            className="w-full p-2 border rounded"
+            placeholder="What's your quiz about? (e.g., 'History Trivia')"
+            className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg transition-all duration-300 ease-in-out
+              ${isQuizFormExpanded ? 'mb-4' : 'mb-0'}`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onFocus={() => setIsQuizFormExpanded(true)}
+            disabled={step > 1} // Disable once quiz is created
           />
-          <textarea
-            placeholder="Quiz Description"
-            className="w-full p-2 border rounded"
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Tags (comma separated)"
-            className="w-full p-2 border rounded"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="private"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-            />
-            <label htmlFor="private">Make this quiz private</label>
-          </div>
-          {isPrivate && (
-            <input
-              type="text"
-              placeholder="Allowed Users (comma separated emails)"
-              className="w-full p-2 border rounded"
-              value={allowedUsers}
-              onChange={(e) => setAllowedUsers(e.target.value)}
-            />
-          )}
-          <button
-            onClick={createQuiz}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Create Quiz
-          </button>
-        </div>
-      )}
 
-      {step === 2 && (
-        <div className="space-y-4 mt-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Add Question</h2>
-            <span className="text-sm text-gray-600">
-              Questions added: {addedQuestions.length}
+          {isQuizFormExpanded && step === 1 && (
+            <div className="space-y-4 pt-2">
+              <textarea
+                placeholder="Give a short description (optional)"
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Tags (e.g., science, fun, movies)"
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="private"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="private" className="text-gray-700 select-none">Make this quiz private</label>
+              </div>
+              {isPrivate && (
+                <input
+                  type="text"
+                  placeholder="Allowed User Emails (comma separated)"
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={allowedUsers}
+                  onChange={(e) => setAllowedUsers(e.target.value)}
+                />
+              )}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={createQuiz}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                >
+                  Create Quiz
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <hr className="my-8 border-gray-300" />
+
+      {/* Question Addition Form (Step 2) */}
+      {step >= 2 && quizId && (
+        <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-700 mb-4 flex items-center justify-between">
+            <span>Add Questions</span>
+            <span className="text-sm text-gray-500 font-normal">
+              Total Questions: {addedQuestions.length}
             </span>
-          </div>
-          <textarea
-            placeholder="Enter your question"
-            className="w-full p-2 border rounded"
-            rows="2"
-            value={questionText}
-            onChange={(e) => setQuestionText(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={submitQuestion}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              Save Question
-            </button>
-            {addedQuestions.length > 0 && (
-              <button
-                onClick={finishQuiz}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Finish Quiz
-              </button>
+          </h2>
+
+          <div ref={questionFormRef} className="relative transition-all duration-300 ease-in-out">
+            <textarea
+              placeholder="Type your question here..."
+              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-lg transition-all duration-300 ease-in-out
+                ${isQuestionFormExpanded ? 'mb-4' : 'h-12 resize-none overflow-hidden pb-3'} `}
+              rows={isQuestionFormExpanded ? "3" : "1"}
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              onFocus={() => setIsQuestionFormExpanded(true)}
+              // Disable if on Step 3 (options phase)
+              disabled={step === 3}
+            />
+
+            {isQuestionFormExpanded && step === 2 && (
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={submitQuestion}
+                  className="bg-green-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200"
+                >
+                  Save Question
+                </button>
+                {addedQuestions.length > 0 && (
+                  <button
+                    onClick={finishQuiz}
+                    className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
+                  >
+                    Finish Quiz
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
       )}
 
-      {step === 3 && (
-        <div className="mt-6" ref={questionFormRef}>
-          <h3 className="text-xl font-semibold mb-4">
-            Add Options for: "{addedQuestions[addedQuestions.length - 1]?.question}"
+      {/* Options Addition Form (Step 3) */}
+      {step === 3 && currentQuestionId && (
+        <div className="bg-white shadow-xl rounded-lg p-6 mb-8 border border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-700 mb-4">
+            Options for: <br />
+            <span className="text-blue-600 text-lg font-normal italic">
+              "{addedQuestions.find(q => q._id === currentQuestionId)?.question || 'Last Question'}"
+            </span>
           </h3>
 
-          {options.map((opt, idx) => (
-            <div key={idx} className="flex items-center gap-2 mb-3">
-              <input
-                type="radio"
-                name="correct"
-                checked={opt.isCorrect}
-                onChange={() => setCorrectOption(idx)}
-              />
-              <input
-                type="text"
-                placeholder={`Option ${idx + 1}`}
-                value={opt.text}
-                onChange={(e) => updateOptionText(idx, e.target.value)}
-                className="flex-1 p-2 border rounded"
-              />
-              {options.length > 1 && (
-                <button
-                  onClick={() => removeOptionField(idx)}
-                  className="text-red-600 hover:text-red-800 px-2"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
+          <div className="space-y-3">
+            {options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="correct-option" // Ensure only one correct option can be selected
+                  checked={opt.isCorrect}
+                  onChange={() => setCorrectOption(idx)}
+                  className="h-5 w-5 text-purple-600 focus:ring-purple-500"
+                />
+                <input
+                  type="text"
+                  placeholder={`Option ${idx + 1}`}
+                  value={opt.text}
+                  onChange={(e) => updateOptionText(idx, e.target.value)}
+                  className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                {options.length > 2 && ( // Allow removal only if more than 2 options
+                  <button
+                    onClick={() => removeOptionField(idx)}
+                    className="text-red-600 hover:text-red-800 text-xl font-bold p-1 rounded-full hover:bg-red-50 transition-colors"
+                    title="Remove option"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
 
           <button
             onClick={addOptionField}
-            className="text-blue-600 underline text-sm mb-4"
+            className="text-blue-600 underline text-md my-4 flex items-center gap-1 hover:text-blue-800 transition-colors"
           >
-            ➕ Add another option
+            <span className="text-xl leading-none">+</span> Add another option
           </button>
 
-          <br />
-
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={submitOptions}
-              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+              className="bg-purple-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200"
             >
               Save Options
             </button>
             <button
               onClick={addAnotherQuestion}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="bg-gray-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
             >
-              Skip Options (Add Later)
+              Add Next Question
             </button>
           </div>
         </div>
       )}
 
-      {/* Show added questions */}
+      {/* Show added questions summary */}
       {addedQuestions.length > 0 && (
-        <div className="mt-8 p-4 bg-gray-50 rounded">
-          <h3 className="text-lg font-semibold mb-2">Added Questions:</h3>
-          <ul className="space-y-1">
+        <div className="mt-8 p-6 bg-blue-50 rounded-lg shadow-inner border border-blue-200">
+          <h3 className="text-xl font-bold text-blue-800 mb-4">Your Quiz So Far:</h3>
+          <ul className="space-y-2">
             {addedQuestions.map((q, idx) => (
-              <li key={idx} className="text-sm text-gray-700">
-                {idx + 1}. {q.question}
+              <li key={q._id} className="flex items-start">
+                <span className="font-semibold text-blue-700 mr-2">{idx + 1}.</span>
+                <span className="text-gray-800">{q.question}</span>
               </li>
             ))}
           </ul>

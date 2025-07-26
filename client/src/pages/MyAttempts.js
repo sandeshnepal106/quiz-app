@@ -47,15 +47,19 @@ function MyAttempts() {
           {attempts.map((attempt, index) => (
             <div
               key={attempt.attemptId || index}
-              className="border rounded-lg shadow-sm p-4 hover:shadow-md transition" onClick={()=>goToQuiz(attempt.quizId, attempt.attemptId)}
+              className="border rounded-lg shadow-sm p-4 hover:shadow-md transition" 
             >
-              <h3 className="text-lg font-semibold">{attempt.quizTitle}</h3>
-              <p className="text-sm text-gray-600 italic">Created By: {attempt.createdBy}</p>
-              <p className="text-sm text-gray-600">Score: {attempt.score}</p>
-              <p className="text-sm text-gray-600">
+              <div className='flex justify-between'>
+                <h3 className="text-lg font-semibold p-1"  onClick={()=>goToQuiz(attempt.quizId, attempt.attemptId)}>{attempt.quizTitle}</h3>
+                <LikeQuiz quizId={attempt.quizId}/>
+              </div>
+              <p className='text-md text-gray-200 italic p-1'>{attempt.description}</p>
+              <p className="text-sm text-gray-600 italic p-1">Created By: {attempt.createdBy}</p>
+              <p className="text-sm text-gray-600 p-1">Score: {attempt.score}/100</p>
+              <p className="text-sm text-gray-600 p-1 ">
                 Date: {new Date(attempt.date).toLocaleString()}
               </p>
-              <LikeQuiz quizId={attempt.quizId}/>
+              
             </div>
           ))}
         </div>

@@ -19,6 +19,7 @@ function Quiz() {
   const [attemptAnswers, setAttemptAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
 
   const fetchQuiz = async () => {
   try {
@@ -33,6 +34,8 @@ function Quiz() {
     if (attemptId) {
       const resp = await axios.get(`${backendUrl}/api/user/get-attempt-details/${attemptId}`)
       if (resp.data.success) {
+        
+        setScore(resp.data.attempt.score)
         const details = resp.data.attempt;
         details.questions.forEach((q) => {
           
@@ -55,7 +58,6 @@ function Quiz() {
 
     if (response.data.success) {
       setIsMine(response.data.authorId === userId);
-      console.log( userId, response.data.authorId)
       const attempts = res.data.attempts || [];
       const attemptedQuizIds = new Set(attempts.map(a => String(a.quizId)));
       setIsAttempted(attemptedQuizIds.has(String(quizId)));
@@ -188,8 +190,8 @@ function Quiz() {
   }
 
   return (
-    <div>
-      <LikeQuiz quizId={quizId}/>
+    <div className='mb-10 md:mb-2'>
+      
       {!isMine && !isAttempted && (
         <div className="max-w-2xl mx-auto p-4">
           <div className="mb-6">
@@ -202,9 +204,11 @@ function Quiz() {
               <span className="text-sm text-gray-700">
                 Answered: {getAnsweredCount()}/{quiz.totalQuestions}
               </span>
+              <LikeQuiz quizId={quizId}/>
             </div>
+
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className='mb-10'>
             {quiz.question && quiz.question.map((q, index) => (
               <div key={q._id} className="mb-8 p-4 border rounded-lg bg-white shadow-sm">
                 <h3 className="font-semibold mb-4 text-lg">
@@ -284,10 +288,12 @@ function Quiz() {
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">{quiz.title}</h1>
             <p className="text-gray-600 mb-4">{quiz.description}</p>
+            <LikeQuiz quizId={quizId}/>
             <div className="flex justify-between items-center bg-gray-50 p-3 rounded mb-4">
               <span className="text-sm text-gray-700">
                 Total Questions: {quiz.totalQuestions}
               </span>
+              
               <div className="space-x-2">
                 <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                   Edit Quiz
@@ -331,9 +337,16 @@ function Quiz() {
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2 text-blue-800">{quiz.title} (Your Results)</h1>
             <p className="text-gray-600 mb-4">{quiz.description}</p>
-            <h2 className="text-xl font-semibold mb-6 text-center text-blue-700 bg-blue-50 p-3 rounded-lg">
-              Review Your Answers 📋
-            </h2>
+            <div className='flex justify-between'>
+              <h2 className="text-xl font-semibold mb-6 text-center text-blue-700 bg-blue-50 p-3 rounded-lg ">
+                Review Your Answers 📋
+              </h2>
+              <h3>
+                Score: {score}/100
+              </h3>
+              <LikeQuiz quizId={quizId}/>
+            </div>
+            
             {quiz.question && quiz.question.length > 0 ? (
               quiz.question.map((q, index) => (
                 <div key={q._id} className="mb-6 p-5 border border-blue-200 rounded-lg bg-white shadow-md">
@@ -352,11 +365,11 @@ function Quiz() {
 
                       if (isSelected && isCorrect) {
                         optionClassName += " bg-green-100 border-green-400 font-medium";
-                        statusText = '(Your Correct Answer)';
+                        statusText = ' ';
                         statusEmoji = '✅';
                       } else if (isSelected && !isCorrect) {
                         optionClassName += " bg-red-100 border-red-400 font-medium";
-                        statusText = '(Your Answer)';
+                        statusText = ' ';
                         statusEmoji = '❌';
                       } else if (isCorrect) {
                         optionClassName += " bg-blue-50 border-blue-300 font-medium";

@@ -78,6 +78,27 @@ export const logout = async(req, res) =>{
     }
 }
 
+export const editProfile = async(req, res) =>{
+    const {name, username, email, password} = req.body;
+    const userId = req.userId;
+    if(!userId){
+        return res.json({success: false, message: "User Id not provided"})
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10); // manually hash
+    
+    try {
+
+        const updatedUserDetails = await UserModel.findOneAndUpdate({_id: userId}, {name, username, email, password:hashedPassword}, {new:true});
+        if(!updatedUserDetails){
+            return res.json({success: false, message: "Could not update user details."})
+        }
+        return res.json({success: true, message: "Successfully updated user details."})
+    } catch (error) {
+        return res.json({success: false, message: error.message})
+    }
+}
+
 export const checkAuth = async (req, res) =>{
     try {
         const userId = req.userId;
@@ -179,9 +200,25 @@ export const myDetails = async (req, res) =>{
         if(!user){
             return res.json({success: false, message: "User not found."});
         }
-        return res.json({success: true, user, userId, message: "Logged in."});
+        return res.json({success: true, user, message: "Logged in."});
         
     } catch (error) {
         return res.json({success: false, message: error.message});
     }
 }
+
+
+export const uploadProfilePic = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No image uploaded' });
+
+    const imageUrl = req.file.path;
+
+    // Update user profile with image URL
+    await UserModel.findByIdAndUpdate(req.userId, { profilePic: imageUrl });
+
+    res.json({ success: true, message: 'Profile picture updated', imageUrl });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

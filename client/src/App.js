@@ -10,6 +10,7 @@ import Quiz from './pages/Quiz.js';
 import MyProfile from './pages/MyProfile.js';
 import Navbar from './components/Navbar.js';
 import MyAttempts from './pages/MyAttempts.js';
+import Profile from './pages/Profile.js';
 
 function App() {
   const {loading} = useContext(AppContext);
@@ -21,7 +22,7 @@ function App() {
     )
   }
   return (
-    <div>
+    <div className='min-h-screen'>
        <Navbar/>
       <ToastContainer/>
       <Routes>
@@ -29,9 +30,10 @@ function App() {
         <Route path = '/login' element={<Login/>}/>
         <Route path = '/reset-password' element={<ResetPassword/>}/>
         <Route path = '/dashboard' element= {<Dashboard/>}/>
-        <Route path="/quiz/:quizId" element={<Quiz />} />
+        <Route path = "/quiz/:quizId" element={<Quiz />} />
         <Route path = '/my-attempts' element = {<MyAttempts/>}/>
         <Route path = '/profile' element= {<MyProfile/>}/>
+        <Route path = '/profiles/:profileId' element={<Profile/>}/>
       </Routes>
 
      
